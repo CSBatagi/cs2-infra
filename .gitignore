@@ -1,2 +1,5 @@
-
-pgdata
+**/pgdata
+**/node_modules
+scratch.txt
+pg-mw-r
+docker-compose.yml
