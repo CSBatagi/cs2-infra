@@ -1,9 +1,19 @@
 const express = require('express');
 const { Pool } = require('pg');
 const { json } = require('body-parser');
+const Ajv = require('ajv');
+const fs = require('fs');
+const path = require('path');
 
 const app = express();
+
 app.use(json()); // Parse JSON request bodies
+let matchData = {};
+const ajv = new Ajv();
+const schemaPath = path.join(__dirname, 'schema.json');
+console.log('Schema path:', schemaPath);
+const schema = JSON.parse(fs.readFileSync(schemaPath, 'utf8'));
+const validate = ajv.compile(schema);
 
 // Hardcoded PostgreSQL connection details
 
@@ -60,7 +70,34 @@ app.post('/execute-query', async (req, res) => {
   }
 });
 
+// POST  endpoint to store a match json and stores in the memory until the GET end point is called
+app.post('/store-match', async (req, res) => {
+  try {
+    const match = req.body; // Get the match from the request body
+    // check if the match is compliant with the JSON schema at schema.json
+    console.log('Match:', match);
+    const valid = validate(match);
+    if (!valid) {
+      return res.status(400).json({ error: 'Match is not compliant with the schema.', details: validate.errors });
+    } 
+    matchData = match;
+    res.json({ message: 'Match stored successfully' });
+  } catch (err) {
+    console.error('Error parsing request body:', err);
+    res.status(400).json({ error: 'Failed to parse request body.', details: err.message });
+  }
+});
 
+// GET endpoint to retrieve the stored match json
+app.get('/get-match', async (req, res) => {
+  try {
+    res.json(matchData);
+    matchData = {};
+  } catch (err) {
+    console.error('Error parsing request body:', err);
+    res.status(400).json({ error: 'Failed to parse request body.', details: err.message });
+  }
+});
 
 // Start the server
 const port = process.env.PORT || 3000;

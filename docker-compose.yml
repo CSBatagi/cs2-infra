@@ -1,0 +1,90 @@
+services:
+  ddns:
+    image: favonia/cloudflare-ddns:latest
+    network_mode: host # This bypasses network isolation and makes IPv6 easier (optional; see below)
+    restart: always # Restart the updater after reboot
+    user: "1000:1000" # Run the updater with specific user and group IDs (in that order).
+    # You can change the two numbers based on your need.
+    read_only: true # Make the container filesystem read-only (optional but recommended)
+    cap_drop: [all] # Drop all Linux capabilities (optional but recommended)
+    security_opt: [no-new-privileges:true] # Another protection to restrict superuser privileges (optional but recommended)
+    environment:
+      - DOMAINS=db2.csbatagi.com
+      - PROXIED=false # Tell Cloudflare to cache webpages and hide your IP (optional)
+    env_file:
+      - path: .dns_secrets
+        required: true
+      
+  get5db:
+    image: yobasystems/alpine-mariadb
+    container_name: get5db
+    restart: always
+    environment:
+      - MYSQL_DATABASE=get5
+      - MYSQL_CHARSET=utf8mb4
+      - MYSQL_COLLATION=utf8mb4_general_ci
+    env_file:
+      - path: .my_sql_secrets
+        required: true
+    ports:
+      - 3306:3306
+    volumes:
+      - ../get5/get5db/mysql:/var/lib/mysql
+
+  middleware:
+    restart: always
+    build:
+      context: ./pg-mw  # Path to the directory containing the Dockerfile
+    environment:
+      DB_HOST: postgres # Hostname matches the service name below
+      DB_DATABASE: csdm
+    env_file:
+      - path: .mw_secrets
+        required: true
+    networks:
+      - db2
+    ports:
+      - 3000:3000
+    labels:
+      caddy: db2.csbatagi.com 
+      caddy.handle_path: /*
+      caddy.handle_path.0_reverse_proxy: "{{upstreams 3000}}"
+    depends_on:
+      - postgres  # Ensure the database is started before middleware
+
+  postgres:
+    image: postgres
+    restart: always
+    ports:
+      - 5432:5432
+    networks:
+      - db2
+    env_file:
+      - path: .pg_secrets
+        required: true
+    volumes:
+     - ./pgdata:/var/lib/postgresql/data
+
+  caddy:
+    image: lucaslorentz/caddy-docker-proxy:ci-alpine
+    container_name: caddy-reverse-proxy
+    restart: unless-stopped
+    networks:
+      - db2 
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    ports:
+      - 80:80
+      - 443:443
+    environment:
+      - CADDY_INGRESS_NETWORKS=db2
+    labels:
+      caddy.email: csbatagi@gmail.com
+
+volumes:
+  pgdata:
+    
+networks:
+  db2:
+    external: true
+
