@@ -4,6 +4,10 @@ const { json } = require('body-parser');
 const Ajv = require('ajv');
 const fs = require('fs');
 const path = require('path');
+const RconConnection = require('./rcon.js');
+
+
+const rconConnection = new RconConnection();
 
 const app = express();
 
@@ -26,6 +30,10 @@ const pool = new Pool({
 });
 
 app.use((req, res, next) => {
+  if (req.method === 'GET') {
+    return next();
+  }
+
   const apiKey = req.headers['authorization'];
 
   // Check if the Authorization header is present and starts with 'Bearer '
@@ -71,7 +79,7 @@ app.post('/execute-query', async (req, res) => {
 });
 
 // POST  endpoint to store a match json and stores in the memory until the GET end point is called
-app.post('/store-match', async (req, res) => {
+app.post('/start-match', async (req, res) => {
   try {
     const match = req.body; // Get the match from the request body
     // check if the match is compliant with the JSON schema at schema.json
@@ -81,6 +89,8 @@ app.post('/store-match', async (req, res) => {
       return res.status(400).json({ error: 'Match is not compliant with the schema.', details: validate.errors });
     } 
     matchData = match;
+    await rconConnection.startMatch();
+
     res.json({ message: 'Match stored successfully' });
   } catch (err) {
     console.error('Error parsing request body:', err);
