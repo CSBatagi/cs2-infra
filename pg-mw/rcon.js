@@ -4,7 +4,7 @@ module.exports = class RconConnection {
 
   constructor() {
     this.matchCommand = 'matchzy_loadmatch_url "https://db2.csbatagi.com/get-match"';
-    this.compCommand = 'exec comp';
+    this.compCommand = 'exec comp.cfg';
     this.conn = null;  // Will be initialized when needed
     this.isConnected = false;  // Track connection state
 
@@ -17,7 +17,7 @@ module.exports = class RconConnection {
     await this.executeCommand(this.compCommand);
     setTimeout(async () => {
        await this.executeCommand(this.matchCommand);
-    }, 5000);
+    }, 7000);
   }
 
   async executeCommand(command) {

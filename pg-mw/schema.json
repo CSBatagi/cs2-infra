@@ -78,16 +78,7 @@
       "type": "integer"
     },
     "cvars": {
-      "type": "object",
-      "properties": {
-        "hostname": {
-          "type": "string"
-        },
-        "mp_friendlyfire": {
-          "type": "string"
-        }
-      },
-      "required": ["hostname", "mp_friendlyfire"]
+      "type": "object"
     }
   },
   "required": ["team1", "team2", "num_maps", "maplist", "map_sides", "players_per_team"]
