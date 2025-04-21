@@ -1,0 +1,111 @@
+name: Deploy to GCP
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: 'read'
+  id-token: 'write'  # Required for Workload Identity
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Authenticate to GCP
+        id: auth
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GOOGLE_CREDENTIALS }}
+
+      # - name: Set up Terraform
+      #   uses: hashicorp/setup-terraform@v2
+
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+        with:
+          version: '>= 363.0.0'
+
+      # - name: Terraform Init & Apply
+      #   run: |
+      #     cd terraform
+      #     terraform init
+      #     terraform apply -auto-approve \
+      #       -var="gcp_project_id=${{ secrets.GCP_PROJECT_ID }}" \
+      #       -var="vm_name=${{ secrets.GCP_VM_NAME }}" \
+      #       -var="service_account_email=${{ secrets.GCP_SERVICE_ACCOUNT }}"
+      #
+      - name: Create .dns_secrets file
+        run: |
+          echo "CLOUDFLARE_API_TOKEN=$CLOUDFLARE_TOKEN" > .dns_secrets
+        env:
+          CLOUDFLARE_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+
+      - name: Create .mw_secrets file
+        run: |
+          echo "DB_PASSWORD=$DB_PASSWORD" > .mw_secrets
+          echo "AUTH_TOKEN=$AUTH_TOKEN" >> .mw_secrets
+          echo "DB_USER=$DB_USER" >> .mw_secrets
+          echo "RCON_PASSWORD=$RCON_PASSWORD" >> .mw_secrets
+        env:
+          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+          AUTH_TOKEN: ${{ secrets.AUTH_TOKEN }}
+          DB_USER: ${{ secrets.DB_USER }}
+          RCON_PASSWORD: ${{ secrets.RCON_PASSWORD }}
+
+      - name: Create .my_sql_secrets file
+        run: |
+          echo "MYSQL_ROOT_PASSWORD=$MYSQL_ROOT_PASSWORD" > .my_sql_secrets
+          echo "MYSQL_USER=$MYSQL_USER" >> .my_sql_secrets
+          echo "MYSQL_PASSWORD=$MYSQL_PASSWORD" >> .my_sql_secrets
+        env:
+          MYSQL_ROOT_PASSWORD: ${{ secrets.MYSQL_ROOT_PASSWORD }}
+          MYSQL_USER: ${{ secrets.MYSQL_USER }}
+          MYSQL_PASSWORD: ${{ secrets.MYSQL_PASSWORD }}
+
+      - name: Create .pg_secrets file
+        run: |
+          echo "POSTGRES_PASSWORD=$POSTGRES_PASSWORD" > .pg_secrets
+          echo "POSTGRES_READONLY_PASSWORD=$POSTGRES_READONLY_PASSWORD" >> .pg_secrets
+        env:
+          POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
+          POSTGRES_READONLY_PASSWORD: ${{ secrets.POSTGRES_READONLY_PASSWORD }}
+
+      - name: Create .hayati_secrets file
+        run: |
+          echo "BOT_TOKEN=$DISCORD_BOT_TOKEN" > .hayati_secrets
+
+      - name: Create credentials.json file
+        run: echo "${{ secrets.GOOGLE_CREDENTIALS }}" > credentials.json
+
+      - name: Copy files to GCP VM
+        run: |
+          gcloud compute scp \
+            --zone=${{ secrets.GCP_ZONE }} \
+            ./docker-compose.yml \
+            ./.dns_secrets \
+            ./.mw_secrets \
+            ./.my_sql_secrets \
+            ./.pg_secrets \
+            ./.hayati_secrets \
+            ./credentials.json \
+            ${{ secrets.GCP_VM_NAME }}:~/ \
+            --ssh-key-expire-after=1m  # Short-lived key for security
+
+      - name: Set strict permissions on VM
+        run: |
+          gcloud compute ssh ${{ secrets.GCP_VM_NAME }} --zone=${{ secrets.GCP_ZONE }} \
+            --command="chmod 600 ~/.dns_secrets ~/.mw_secrets ~/.my_sql_secrets ~/.pg_secrets"
+      - name: Cleanup local secrets (optional)
+        run: rm -f .dns_secrets .mw_secrets .my_sql_secrets .pg_secrets
+      - name: Start containers
+        run: |
+          gcloud compute ssh ${{ secrets.GCP_VM_NAME }} --zone=${{ secrets.GCP_ZONE }} \
+            --command="sudo docker compose -f ~/docker-compose.yml up -d"
+
+
+

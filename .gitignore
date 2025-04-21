@@ -1,2 +1,85 @@
+.git
+*.log
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+      - name: Set up Docker Buildx
 
+# C extensions
+*.so
+
+# Distribution / packaging
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# PyInstaller
+#  Usually these files are written by a python script from a template
+#  before PyInstaller builds the exe, so as to inject date/other infos into it.
+*.manifest
+*.spec
+
+# Installer logs
+pip-log.txt
+pip-delete-this-directory.txt
+
+.pytest_cache/
+
+# Environments
+.env
+.venv
+env/
+venv/
+penv/
+ENV/
+env.bak/
+venv.bak/
+
+#VsCode
+.vscode/
+.devcontainer
+
+# Terraform files - Ignore providers, modules, state files, etc.
+**/.terraform/
+*.tfstate
+*.tfstate.backup
+*.tfplan
+*.tfvars
+*.tfvars.json
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+.terraformrc
+terraform.rc
+
+# mkdocs documentation
+/site
+logs
+.idea
+.github
+# Ignore generated credentials from google-github-actions/auth
+gha-creds-*.json
+key.json
 pgdata
+**/pgdata
+**/node_modules/**
+pg-mw-r
+*_secrets
+credentials.json
+**/dev/**

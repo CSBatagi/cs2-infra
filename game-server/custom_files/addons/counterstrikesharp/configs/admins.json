@@ -1,0 +1,54 @@
+{
+  "bobinaj": {
+    "identity": "76561198047085527",
+    "immunity": 100,
+    "groups": [
+      "#css/admin"
+    ],
+    "flags": [
+      "@css/root"
+    ]
+  },
+  "hillibili": {
+    "identity": "STEAM_0:1:40618252",
+    "groups": [
+      "#css/admincik"
+    ]
+  },
+  "seyit": {
+    "identity": "STEAM_0:1:17906644",
+    "groups": [
+      "#css/admin"
+    ],
+    "flags": [
+      "@css/root"
+    ]
+  },
+  "malawhur": {
+    "identity": "STEAM_0:1:20845670",
+    "groups": [
+      "#css/admin"
+    ],
+    "flags": [
+      "@css/root"
+    ]
+  },
+  "candeha": {
+    "identity": "STEAM_0:0:149508467",
+    "groups": [
+      "#css/admin"
+    ],
+    "flags": [
+      "@css/root"
+    ]
+  },
+  "eklips": {
+    "identity": "STEAM_0:1:22169968",
+    "groups": [
+      "#css/admin"
+    ],
+    "flags": [
+      "@css/root"
+    ]
+  }
+}

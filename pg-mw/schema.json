@@ -1,0 +1,85 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "properties": {
+    "matchid": {
+      "type": "integer"
+    },
+    "team1": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "players": {
+          "type": "object",
+          "patternProperties": {
+            "^[0-9]+$": {
+              "type": "string"
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "required": ["name", "players"]
+    },
+    "team2": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "players": {
+          "type": "object",
+          "patternProperties": {
+            "^[0-9]+$": {
+              "type": "string"
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "required": ["name", "players"]
+    },
+    "num_maps": {
+      "type": "integer"
+    },
+    "maplist": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "map_sides": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "spectators": {
+      "type": "object",
+      "properties": {
+        "players": {
+          "type": "object",
+          "patternProperties": {
+            "^[0-9]+$": {
+              "type": "string"
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "required": ["players"]
+    },
+    "clinch_series": {
+      "type": "boolean"
+    },
+    "players_per_team": {
+      "type": "integer"
+    },
+    "cvars": {
+      "type": "object"
+    }
+  },
+  "required": ["team1", "team2", "num_maps", "maplist", "map_sides", "players_per_team"]
+}

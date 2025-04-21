@@ -1,0 +1,8 @@
+{
+    "DatabaseType": "MySQL",
+    "MySqlHost": "db2.csbatagi.com",
+    "MySqlDatabase": "get5",
+    "MySqlUsername": "get5",
+    "MySqlPassword": "5TtRNWRdFqM8N",
+    "MySqlPort": 3306
+}

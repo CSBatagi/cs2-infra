@@ -9,47 +9,46 @@ services:
     cap_drop: [all] # Drop all Linux capabilities (optional but recommended)
     security_opt: [no-new-privileges:true] # Another protection to restrict superuser privileges (optional but recommended)
     environment:
-      - CLOUDFLARE_API_TOKEN=vtAwjRrcBFYpqpYR6sfvJjg6X5ehNdauTc4xCS8H
       - DOMAINS=db2.csbatagi.com
       - PROXIED=false # Tell Cloudflare to cache webpages and hide your IP (optional)
+    env_file:
+      - path: .dns_secrets
+        required: true
       
-  # get5db:
-  #   image: yobasystems/alpine-mariadb
-  #   container_name: get5db
-  #   restart: always
-  #   labels:
-  #     caddy: db2.csbatagi.com 
-  #     caddy.handle_path: /db/*
-  #     caddy.handle_path.0_reverse_proxy: "{{upstreams 3306}}"
-  #   networks:
-  #     - get5
-  #   environment:
-  #     - MYSQL_ROOT_PASSWORD=4wCnXX2pf1l0L 
-  #     - MYSQL_DATABASE=get5
-  #     - MYSQL_USER=get5
-  #     - MYSQL_PASSWORD=5TtRNWRdFqM8N
-  #     - MYSQL_CHARSET=utf8mb4
-  #     - MYSQL_COLLATION=utf8mb4_general_ci
-  #   ports:
-  #     - 3306:3306
-  #   volumes:
-  #     - ./get5db/mysql:/var/lib/mysql
-  #
+  get5db:
+    image: yobasystems/alpine-mariadb
+    container_name: get5db
+    restart: always
+    environment:
+      - MYSQL_DATABASE=get5
+      - MYSQL_CHARSET=utf8mb4
+      - MYSQL_COLLATION=utf8mb4_general_ci
+    env_file:
+      - path: .my_sql_secrets
+        required: true
+    ports:
+      - 3306:3306
+    volumes:
+      - ../get5/get5db/mysql:/var/lib/mysql
+
   middleware:
+    restart: always
     build:
       context: ./pg-mw  # Path to the directory containing the Dockerfile
-    ports:
-      - "3000:80"  # Map container port 3000 to host port 80 
     environment:
-      DB_USER: postgres
       DB_HOST: postgres # Hostname matches the service name below
       DB_DATABASE: csdm
-      DB_PASSWORD: 5TtRNWRdFqM8N
-      AUTH_TOKEN: your_auth_token
+    env_file:
+      - path: .mw_secrets
+        required: true
+    networks:
+      - db2
+    ports:
+      - 3000:3000
     labels:
       caddy: db2.csbatagi.com 
       caddy.handle_path: /*
-      caddy.handle_path.0_reverse_proxy: "{{upstreams 80}}"
+      caddy.handle_path.0_reverse_proxy: "{{upstreams 3000}}"
     depends_on:
       - postgres  # Ensure the database is started before middleware
 
@@ -58,8 +57,11 @@ services:
     restart: always
     ports:
       - 5432:5432
-    environment:
-      POSTGRES_PASSWORD: 5TtRNWRdFqM8N
+    networks:
+      - db2
+    env_file:
+      - path: .pg_secrets
+        required: true
     volumes:
      - ./pgdata:/var/lib/postgresql/data
 
@@ -68,7 +70,7 @@ services:
     container_name: caddy-reverse-proxy
     restart: unless-stopped
     networks:
-      - get5
+      - db2 
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
     ports:
